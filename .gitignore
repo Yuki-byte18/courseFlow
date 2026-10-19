@@ -1,0 +1,72 @@
+# ============================================================
+# 铁律：凡是「能在别处重新生成」或「绝不能公开」的，都不入库。
+# 提交前自检：git status 里每个文件，你都要能说清它为什么在。
+# ============================================================
+
+# ---- 密钥与本地配置：绝对不能入库 ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+backend/configs/config.yaml
+
+# ---- Go ----
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+*.prof
+vendor/
+
+# ---- Node / React ----
+node_modules/
+frontend/dist/
+frontend/.vite/
+pnpm-debug.log*
+npm-debug.log*
+
+# ---- Python（数据开发）----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pyspark-plot/
+
+# ---- 本地运行时数据与日志 ----
+/data/
+/logs/
+/tmp/
+*.log
+
+# ---- 数仓落地文件（ODS/DWD/DWS/ADS 的 Parquet）----
+/warehouse/data/
+
+# ---- 压测产物：脚本入库，原始结果不入库 ----
+benchmark/results/*
+!benchmark/results/.gitkeep
+
+# ---- 编辑器 / 操作系统 ----
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.history/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 前端覆盖率报告 ----
+frontend/coverage/
+
+# ---- 本地构建缓存 ----
+/.cache/
+
+# ---- 临时打包产物 ----
+*.tar.gz
+*.zip
