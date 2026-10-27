@@ -7,7 +7,7 @@
 
 app:
   name: courseflow
-  env: dev                # dev | prod
+  env: dev                # dev | prod（prod 会强制要求覆盖 jwt.secret）
 
 server:
   host: 0.0.0.0
@@ -35,3 +35,10 @@ mysql:
 
   slow_threshold: 200ms
   log_level: warn         # silent | error | warn | info
+
+jwt:
+  # HS256 对称密钥，至少 16 字符。
+  # 这个默认值只用于本地开发；app.env=prod 时如果不改，启动会直接失败。
+  secret: "dev-only-insecure-secret-change-me"
+  issuer: courseflow
+  expire: 2h              # token 有效期

@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	"courseflow/internal/platform/auth"
 	"courseflow/internal/platform/config"
 	"courseflow/internal/platform/middleware"
 )
@@ -21,12 +22,13 @@ type Server struct {
 	cfg    *config.Config
 	log    *zap.Logger
 	db     *gorm.DB
+	tm     *auth.TokenManager
 	engine *gin.Engine
 	http   *http.Server
 }
 
 // New 构建 Server 并注册中间件与路由。
-func New(cfg *config.Config, log *zap.Logger, db *gorm.DB) *Server {
+func New(cfg *config.Config, log *zap.Logger, db *gorm.DB, tm *auth.TokenManager) *Server {
 	if cfg.App.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
@@ -37,7 +39,7 @@ func New(cfg *config.Config, log *zap.Logger, db *gorm.DB) *Server {
 	// Recovery 放最前面：任何后续中间件 panic 都能被兜住
 	engine.Use(gin.Recovery(), middleware.RequestID(), middleware.AccessLog(log))
 
-	s := &Server{cfg: cfg, log: log, db: db, engine: engine}
+	s := &Server{cfg: cfg, log: log, db: db, tm: tm, engine: engine}
 	s.registerRoutes()
 
 	s.http = &http.Server{
@@ -70,8 +72,50 @@ func (s *Server) registerRoutes() {
 	s.engine.GET("/readyz", s.handleReadyz)
 
 	v1 := s.engine.Group("/api/v1")
+
+	// ---- 公开路由：不需要登录 ----
 	v1.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
+	})
+
+	// ---- 需要登录 ----
+	authed := v1.Group("", middleware.RequireAuth(s.tm, s.log))
+	authed.GET("/me", s.handleMe)
+
+	// ---- 三端路由组 ----
+	// 目前还没有业务接口，先留结构。接口实现后按下面这样挂：
+	//
+	//   student := authed.Group("/student", middleware.RequireRole("student"))
+	//   teacher := authed.Group("/teacher", middleware.RequireRole("teacher"))
+	//   admin   := authed.Group("/admin",   middleware.RequireRole("admin"))
+	//
+	// 粒度更细的用权限码，例如排课接口：
+	//   admin.POST("/offerings", middleware.RequirePerm("offering:write"), h.CreateOffering)
+	//
+	// 注意：RequireRole / RequirePerm 必须挂在 RequireAuth 之后，
+	// 否则上下文里没有用户，会一律返回 401。
+}
+
+// handleMe 返回当前登录用户（信息来自 JWT，不查库）。
+// 前端用它决定渲染哪些菜单和按钮。
+func (s *Server) handleMe(c *gin.Context) {
+	u, ok := middleware.CurrentUser(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": gin.H{
+				"code":       "unauthorized",
+				"message":    "认证失败，请重新登录",
+				"request_id": middleware.RequestIDFrom(c),
+			},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user_id":  u.ID,
+		"username": u.Username,
+		"roles":    u.Roles,
+		"perms":    u.Perms,
 	})
 }
 

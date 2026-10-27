@@ -20,6 +20,9 @@ import (
 
 const envPrefix = "COURSEFLOW"
 
+// defaultJWTSecret 只用于开发环境。生产环境必须覆盖它，Validate 会拦。
+const defaultJWTSecret = "dev-only-insecure-secret-change-me"
+
 // Config 是配置树的根。
 type Config struct {
 	// SourceFile 是实际读到的配置文件路径，为空表示没找到文件、
@@ -30,6 +33,7 @@ type Config struct {
 	Server ServerConfig `mapstructure:"server"`
 	Log    LogConfig    `mapstructure:"log"`
 	MySQL  MySQLConfig  `mapstructure:"mysql"`
+	JWT    JWTConfig    `mapstructure:"jwt"`
 }
 
 // AppConfig 是应用级配置。
@@ -84,6 +88,13 @@ func (m MySQLConfig) DSN() string {
 	)
 }
 
+// JWTConfig 是鉴权配置。
+type JWTConfig struct {
+	Secret string        `mapstructure:"secret"` // HS256 对称密钥，至少 16 字符
+	Issuer string        `mapstructure:"issuer"` // 签发者，校验时会比对
+	Expire time.Duration `mapstructure:"expire"` // token 有效期
+}
+
 // defaults 与上面的结构体标签一一对应，改一处必须改另一处。
 func defaults() map[string]any {
 	return map[string]any{
@@ -111,6 +122,10 @@ func defaults() map[string]any {
 		"mysql.conn_max_idle_time": "10m",
 		"mysql.slow_threshold":     "200ms",
 		"mysql.log_level":          "warn",
+
+		"jwt.secret": defaultJWTSecret,
+		"jwt.issuer": "courseflow",
+		"jwt.expire": "2h",
 	}
 }
 
@@ -172,6 +187,15 @@ func (c *Config) Validate() error {
 			"配置错误: mysql.max_open_conns(%d) 不能小于 mysql.max_idle_conns(%d)",
 			c.MySQL.MaxOpenConns, c.MySQL.MaxIdleConns,
 		)
+	}
+	if len(c.JWT.Secret) < 16 {
+		return fmt.Errorf("配置错误: jwt.secret 至少需要 16 个字符（当前 %d）", len(c.JWT.Secret))
+	}
+	if c.App.Env == "prod" && c.JWT.Secret == defaultJWTSecret {
+		return errors.New("配置错误: 生产环境必须覆盖 jwt.secret，不能沿用内置的开发默认值")
+	}
+	if c.JWT.Expire <= 0 {
+		return errors.New("配置错误: jwt.expire 必须大于 0")
 	}
 	return nil
 }

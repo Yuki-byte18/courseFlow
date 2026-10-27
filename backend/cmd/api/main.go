@@ -1,6 +1,6 @@
 // Command api 是在线层的 HTTP 入口。
 //
-// 装配顺序：config → logger → db → server。
+// 装配顺序：config → logger → token → db → server。
 // main 里只做装配，不写业务逻辑 —— package main 无法被其他包 import，
 // 写进 main 的逻辑永远没法单元测试。
 package main
@@ -15,6 +15,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"courseflow/internal/platform/auth"
 	"courseflow/internal/platform/config"
 	"courseflow/internal/platform/logger"
 	"courseflow/internal/platform/mysql"
@@ -54,10 +55,16 @@ func run() error {
 		log.Info("配置已加载", zap.String("file", cfg.SourceFile))
 	}
 
+	tm, err := auth.NewTokenManager(cfg.JWT)
+	if err != nil {
+		return err
+	}
+
 	log.Info("启动 courseflow api",
 		zap.String("service", cfg.App.Name),
 		zap.String("env", cfg.App.Env),
 		zap.String("addr", cfg.Server.Addr()),
+		zap.Duration("jwt_ttl", tm.TTL()),
 	)
 
 	// SIGTERM 是容器/虚拟机停服务的信号；SIGINT 是 Ctrl+C
@@ -69,5 +76,5 @@ func run() error {
 		return err
 	}
 
-	return server.New(cfg, log, db).Run(ctx)
+	return server.New(cfg, log, db, tm).Run(ctx)
 }
