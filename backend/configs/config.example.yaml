@@ -1,0 +1,37 @@
+# ==============================================================================
+# courseFlow 后端配置模板
+# 用法：cp config.example.yaml config.yaml 后按需修改。config.yaml 不入库。
+# 优先级：环境变量 > 本文件 > 内置默认值
+# 环境变量规则：COURSEFLOW_<SECTION>_<KEY>，例如 COURSEFLOW_MYSQL_PASSWORD
+# ==============================================================================
+
+app:
+  name: courseflow
+  env: dev                # dev | prod
+
+server:
+  host: 0.0.0.0
+  port: 8080
+  read_timeout: 10s
+  write_timeout: 15s
+  shutdown_timeout: 10s
+
+log:
+  level: debug            # debug | info | warn | error
+  format: console         # console（开发可读） | json（生产可采集）
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: "change_me"   # ← 复制成 config.yaml 后改成你真实的 MySQL 密码
+  database: courseflow
+  charset: utf8mb4
+
+  max_open_conns: 200
+  max_idle_conns: 50
+  conn_max_lifetime: 30m
+  conn_max_idle_time: 10m
+
+  slow_threshold: 200ms
+  log_level: warn         # silent | error | warn | info
