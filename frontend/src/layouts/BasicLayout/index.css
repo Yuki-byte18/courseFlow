@@ -1,0 +1,42 @@
+.basic-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+
+.basic-layout__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 24px;
+  height: 56px;
+  background: #ffffff;
+  border-bottom: 1px solid #eaecef;
+}
+
+.basic-layout__brand {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.basic-layout__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.basic-layout__name {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.basic-layout__content {
+  flex: 1;
+  padding: 24px;
+  background: #ffffff;
+  margin: 16px 24px 24px;
+  border-radius: 8px;
+}
