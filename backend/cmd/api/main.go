@@ -1,8 +1,11 @@
 // Command api 是在线层的 HTTP 入口。
 //
-// 装配顺序：config → logger → token → db → server。
+// 装配顺序：config → logger → token → db → 各域 service/controller → server。
 // main 里只做装配，不写业务逻辑 —— package main 无法被其他包 import，
 // 写进 main 的逻辑永远没法单元测试。
+//
+// 路由由这里统一挂载：platform/server 不 import 任何业务域，
+// 因此「哪个域暴露哪些路由」这件事必须在装配层完成。
 package main
 
 import (
@@ -15,9 +18,11 @@ import (
 
 	"go.uber.org/zap"
 
+	"courseflow/internal/identity"
 	"courseflow/internal/platform/auth"
 	"courseflow/internal/platform/config"
 	"courseflow/internal/platform/logger"
+	"courseflow/internal/platform/middleware"
 	"courseflow/internal/platform/mysql"
 	"courseflow/internal/platform/server"
 )
@@ -76,5 +81,23 @@ func run() error {
 		return err
 	}
 
-	return server.New(cfg, log, db, tm).Run(ctx)
+	srv := server.New(cfg, log, db, tm)
+
+	// ---- 挂载业务域路由 ----
+	// 公开路由挂在 srv.API()，需登录的挂在 srv.Authed()。
+	// RequireRole / RequirePerm 必须叠在 RequireAuth 之后，否则上下文里没有用户。
+	identityCtl := identity.NewController(identity.NewService(db, tm, log))
+	identityCtl.RegisterPublic(srv.API())
+	identityCtl.RegisterProtected(srv.Authed())
+
+	adminGroup := srv.Authed().Group("/admin", middleware.RequireRole(identity.RoleAdmin))
+	identityCtl.RegisterAdmin(adminGroup)
+
+	// 后续域照着这个模式接：
+	//   studentGroup := srv.Authed().Group("/student", middleware.RequireRole(identity.RoleStudent))
+	//   enrollmentCtl.RegisterStudent(studentGroup)
+	//   teacherGroup := srv.Authed().Group("/teacher", middleware.RequireRole(identity.RoleTeacher))
+	//   rosterCtl.RegisterTeacher(teacherGroup)
+
+	return srv.Run(ctx)
 }

@@ -29,6 +29,7 @@ var (
 type User struct {
 	ID       int64    `json:"uid"`
 	Username string   `json:"username"`
+	RealName string   `json:"real_name,omitempty"`
 	Roles    []string `json:"roles,omitempty"`
 	Perms    []string `json:"perms,omitempty"`
 }

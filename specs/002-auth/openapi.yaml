@@ -1,0 +1,469 @@
+openapi: 3.1.0
+
+info:
+  title: courseFlow · 身份认证与权限控制 API
+  version: 1.0.0
+  description: |
+    对应规格：`specs/002-auth/spec.md`
+
+    ## 认证方式
+    除注册与登录外，所有接口都需要请求头：
+
+        Authorization: Bearer <jwt>
+
+    token 有效期 2 小时（可通过 `jwt.expire` 配置）。
+
+    ## 统一错误响应
+
+        {"error": {"code": "invalid_credential", "message": "用户名或密码错误", "request_id": "..."}}
+
+    ## 状态码语义
+    - **401**：你是谁我不知道（没 token / token 坏了 / token 过期）
+    - **403**：知道你是谁，但不许（已登录但角色或权限不足）
+
+    这两种必须严格区分：前端收到 401 跳登录页，收到 403 提示无权访问。
+
+servers:
+  - url: http://127.0.0.1:8080/api/v1
+    description: 本地开发
+
+tags:
+  - name: auth
+    description: 注册、登录、退出、当前用户
+  - name: admin
+    description: 管理员专用
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: 注册学生账号
+      description: |
+        公开接口。**只能创建 student 角色**：请求体里即使带 role/roles 字段也会被忽略。
+        教师与管理员账号必须由管理员通过 `POST /admin/users` 创建。
+
+        注册成功直接返回 token，省掉前端"注册完再登录一次"的一跳。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              minimal:
+                summary: 最小参数
+                value:
+                  username: "2024001"
+                  password: "Passw0rd123"
+                  real_name: "张三"
+              withEmail:
+                summary: 带邮箱
+                value:
+                  username: "2024002"
+                  password: "Passw0rd123"
+                  real_name: "李四"
+                  email: "lisi@example.edu"
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: 登录
+      description: |
+        校验账号密码并签发 token。
+
+        安全注意：用户名不存在与密码错误返回**完全相同**的 401，且耗时被刻意抹平，
+        防止攻击者枚举有效账号。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: 用户名或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredential:
+                  value:
+                    error:
+                      code: invalid_credential
+                      message: 用户名或密码错误
+                      request_id: "9f2a1c3e5b7d"
+        '403':
+          description: 账号被禁用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                userDisabled:
+                  value:
+                    error:
+                      code: user_disabled
+                      message: 账号已被禁用，请联系管理员
+                      request_id: "9f2a1c3e5b7d"
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: 退出登录
+      description: |
+        **JWT 是无状态的**：token 一旦签发，在有效期内服务端必须认。
+        所以本接口不销毁任何服务端会话，只记录一条审计日志，
+        真正生效需要客户端丢弃本地 token。
+
+        若需服务端强制失效：把 jti 写入 Redis 黑名单（TTL = 剩余有效期），
+        代价是每个请求多一次 Redis 查询。当前未实现。
+      responses:
+        '204':
+          description: 已记录退出，无响应体
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /me:
+    get:
+      tags: [auth]
+      summary: 当前登录用户
+      description: |
+        返回当前用户的身份、角色与权限列表，**信息全部来自 token，不查库**。
+
+        前端用它决定渲染哪些菜单和按钮。
+        **注意**：前端隐藏只是体验，真正的安全边界在后端每个接口的鉴权。
+      responses:
+        '200':
+          description: 当前用户信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+              examples:
+                student:
+                  value:
+                    user_id: 1024
+                    username: "2024001"
+                    real_name: "张三"
+                    roles: ["student"]
+                    perms:
+                      - agent:chat
+                      - enrollment:create
+                      - enrollment:drop
+                      - enrollment:read
+                      - offering:read
+                      - schedule:read
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/users:
+    post:
+      tags: [admin]
+      summary: 管理员创建账号（可指定角色）
+      description: |
+        **系统里唯一可以指定角色的入口**，受 `user:write` 权限保护。
+
+        调用方必须同时满足：已登录 + 角色含 `admin` + 权限含 `user:write`。
+        不满足时返回 401（未登录）或 403（无权限）。
+
+        建出的账号密码是"初始密码"，应由管理员线下告知并督促首次登录后修改
+        （改密码接口尚未实现，见 spec §9）。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+            examples:
+              teacher:
+                value:
+                  username: "T1001"
+                  password: "Teach@123"
+                  real_name: "张老师"
+                  roles: ["teacher"]
+              admin:
+                value:
+                  username: "admin2"
+                  password: "Admin@123"
+                  real_name: "教务管理员2"
+                  roles: ["admin"]
+      responses:
+        '201':
+          description: 账号创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        登录或注册后拿到的 token。
+        claims 结构：`uid` / `username` / `real_name` / `roles` / `perms`，签名算法固定 HS256。
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [username, password, real_name]
+      properties:
+        username:
+          type: string
+          minLength: 4
+          maxLength: 64
+          description: 学号或自定义账号，全局唯一
+          examples: ["2024001"]
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          format: password
+          description: bcrypt 只处理前 72 字节，超长会被截断，故限制上限
+        real_name:
+          type: string
+          minLength: 1
+          maxLength: 64
+          examples: ["张三"]
+        email:
+          type: string
+          format: email
+          maxLength: 128
+          description: 可选
+      additionalProperties: true
+      description: |
+        `additionalProperties: true` 是刻意的：即使客户端传了 `roles` 字段，
+        服务端结构体里没有该字段，会被静默忽略，注册结果仍是 student。
+        这是 INV-1 的实现方式。
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          examples: ["2024001"]
+        password:
+          type: string
+          format: password
+
+    CreateUserRequest:
+      type: object
+      required: [username, password, real_name, roles]
+      properties:
+        username:
+          type: string
+          minLength: 4
+          maxLength: 64
+        password:
+          type: string
+          minLength: 6
+          maxLength: 72
+          format: password
+          description: 初始密码，长度要求低于自助注册（6 位）
+        real_name:
+          type: string
+          minLength: 1
+          maxLength: 64
+        email:
+          type: string
+          format: email
+          maxLength: 128
+        roles:
+          type: array
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items:
+            type: string
+            enum: [student, teacher, admin]
+          description: 可同时授予多个角色（例如既是 teacher 又是 admin）
+
+    UserInfo:
+      type: object
+      required: [user_id, username, real_name, roles, perms]
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          examples: [1024]
+        username:
+          type: string
+          examples: ["2024001"]
+        real_name:
+          type: string
+          examples: ["张三"]
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [student, teacher, admin]
+          description: 用户拥有的全部角色，可能为空数组
+        perms:
+          type: array
+          items:
+            type: string
+            description: 权限码，格式 `资源:操作`
+          description: 该用户全部权限码的去重集合，可能为空数组
+          examples:
+            - agent:chat
+            - enrollment:create
+            - enrollment:drop
+            - enrollment:read
+            - offering:read
+            - schedule:read
+
+    AuthResponse:
+      type: object
+      required: [token, expires_at, user]
+      properties:
+        token:
+          type: string
+          description: "JWT，放进 Authorization: Bearer <token> 请求头"
+        expires_at:
+          type: string
+          format: date-time
+          description: token 过期时刻
+        user:
+          $ref: '#/components/schemas/UserInfo'
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, request_id]
+          properties:
+            code:
+              type: string
+              description: 机器可读的错误码，前端据此做分支
+              examples: ["invalid_credential"]
+            message:
+              type: string
+              description: 面向用户的提示文案
+            request_id:
+              type: string
+              description: 与响应头 X-Request-ID 一致，用于排查
+
+  responses:
+    BadRequest:
+      description: 参数校验失败
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidArgument:
+              value:
+                error:
+                  code: invalid_argument
+                  message: "参数不合法: Key: 'RegisterRequest.password' Error:Field validation for 'password' failed on the 'min' tag"
+                  request_id: "9f2a1c3e5b7d"
+
+    Unauthorized:
+      description: 未认证或凭据无效
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missingToken:
+              value:
+                error:
+                  code: missing_token
+                  message: 认证失败，请重新登录
+                  request_id: "9f2a1c3e5b7d"
+            tokenExpired:
+              value:
+                error:
+                  code: token_expired
+                  message: 登录已过期，请重新登录
+                  request_id: "9f2a1c3e5b7d"
+            invalidToken:
+              value:
+                error:
+                  code: invalid_token
+                  message: 认证失败，请重新登录
+                  request_id: "9f2a1c3e5b7d"
+
+    Forbidden:
+      description: 已认证但权限不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            forbidden:
+              value:
+                error:
+                  code: forbidden
+                  message: 缺少所需权限
+                  request_id: "9f2a1c3e5b7d"
+
+    Conflict:
+      description: 资源冲突
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            usernameTaken:
+              value:
+                error:
+                  code: username_taken
+                  message: 用户名已被占用
+                  request_id: "9f2a1c3e5b7d"
+
+    InternalError:
+      description: 服务端未预期错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internalError:
+              value:
+                error:
+                  code: internal_error
+                  message: 服务器内部错误
+                  request_id: "9f2a1c3e5b7d"

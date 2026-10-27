@@ -1,4 +1,8 @@
-// Package server 装配 HTTP 层：中间件、路由、生命周期。
+// Package server 装配 HTTP 层：基础设施中间件、健康检查、路由组、生命周期。
+//
+// 分层约束：本包属于 platform，**不允许 import 任何业务域**。
+// 它只负责建好 gin engine 和几个路由组，业务域的路由由 cmd/api/main.go 挂上去。
+// 这样 platform 保持「被依赖、不依赖别人」的契约。
 package server
 
 import (
@@ -24,10 +28,14 @@ type Server struct {
 	db     *gorm.DB
 	tm     *auth.TokenManager
 	engine *gin.Engine
-	http   *http.Server
+
+	api    *gin.RouterGroup // /api/v1
+	authed *gin.RouterGroup // /api/v1 + RequireAuth
+
+	http *http.Server
 }
 
-// New 构建 Server 并注册中间件与路由。
+// New 构建 Server 并注册基础设施路由。
 func New(cfg *config.Config, log *zap.Logger, db *gorm.DB, tm *auth.TokenManager) *Server {
 	if cfg.App.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -40,7 +48,7 @@ func New(cfg *config.Config, log *zap.Logger, db *gorm.DB, tm *auth.TokenManager
 	engine.Use(gin.Recovery(), middleware.RequestID(), middleware.AccessLog(log))
 
 	s := &Server{cfg: cfg, log: log, db: db, tm: tm, engine: engine}
-	s.registerRoutes()
+	s.registerInfraRoutes()
 
 	s.http = &http.Server{
 		Addr:    cfg.Server.Addr(),
@@ -57,7 +65,14 @@ func New(cfg *config.Config, log *zap.Logger, db *gorm.DB, tm *auth.TokenManager
 // Engine 暴露 gin engine，方便测试用 httptest 直接打 handler，不必占端口。
 func (s *Server) Engine() *gin.Engine { return s.engine }
 
-func (s *Server) registerRoutes() {
+// API 返回 /api/v1 路由组，供业务域挂载公开路由。
+func (s *Server) API() *gin.RouterGroup { return s.api }
+
+// Authed 返回已套上 RequireAuth 的 /api/v1 路由组，供业务域挂载需登录的路由。
+func (s *Server) Authed() *gin.RouterGroup { return s.authed }
+
+// registerInfraRoutes 只注册与业务无关的路由。
+func (s *Server) registerInfraRoutes() {
 	// 存活探针：绝不碰任何依赖。
 	// 如果这里查了数据库，数据库抖一下就会让健康进程被重启，反而放大故障。
 	s.engine.GET("/healthz", func(c *gin.Context) {
@@ -73,50 +88,12 @@ func (s *Server) registerRoutes() {
 
 	v1 := s.engine.Group("/api/v1")
 
-	// ---- 公开路由：不需要登录 ----
 	v1.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
 
-	// ---- 需要登录 ----
-	authed := v1.Group("", middleware.RequireAuth(s.tm, s.log))
-	authed.GET("/me", s.handleMe)
-
-	// ---- 三端路由组 ----
-	// 目前还没有业务接口，先留结构。接口实现后按下面这样挂：
-	//
-	//   student := authed.Group("/student", middleware.RequireRole("student"))
-	//   teacher := authed.Group("/teacher", middleware.RequireRole("teacher"))
-	//   admin   := authed.Group("/admin",   middleware.RequireRole("admin"))
-	//
-	// 粒度更细的用权限码，例如排课接口：
-	//   admin.POST("/offerings", middleware.RequirePerm("offering:write"), h.CreateOffering)
-	//
-	// 注意：RequireRole / RequirePerm 必须挂在 RequireAuth 之后，
-	// 否则上下文里没有用户，会一律返回 401。
-}
-
-// handleMe 返回当前登录用户（信息来自 JWT，不查库）。
-// 前端用它决定渲染哪些菜单和按钮。
-func (s *Server) handleMe(c *gin.Context) {
-	u, ok := middleware.CurrentUser(c)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": gin.H{
-				"code":       "unauthorized",
-				"message":    "认证失败，请重新登录",
-				"request_id": middleware.RequestIDFrom(c),
-			},
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"user_id":  u.ID,
-		"username": u.Username,
-		"roles":    u.Roles,
-		"perms":    u.Perms,
-	})
+	s.api = v1
+	s.authed = v1.Group("", middleware.RequireAuth(s.tm, s.log))
 }
 
 func (s *Server) handleReadyz(c *gin.Context) {
