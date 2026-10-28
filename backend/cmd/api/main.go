@@ -18,12 +18,15 @@ import (
 
 	"go.uber.org/zap"
 
+	"courseflow/internal/course"
+	"courseflow/internal/enrollment"
 	"courseflow/internal/identity"
 	"courseflow/internal/platform/auth"
 	"courseflow/internal/platform/config"
 	"courseflow/internal/platform/logger"
 	"courseflow/internal/platform/middleware"
 	"courseflow/internal/platform/mysql"
+	"courseflow/internal/platform/perms"
 	"courseflow/internal/platform/server"
 )
 
@@ -90,14 +93,22 @@ func run() error {
 	identityCtl.RegisterPublic(srv.API())
 	identityCtl.RegisterProtected(srv.Authed())
 
+	// /admin 前缀的组统一要求管理员角色；组内各接口再各自声明权限码。
 	adminGroup := srv.Authed().Group("/admin", middleware.RequireRole(identity.RoleAdmin))
 	identityCtl.RegisterAdmin(adminGroup)
 
-	// 后续域照着这个模式接：
-	//   studentGroup := srv.Authed().Group("/student", middleware.RequireRole(identity.RoleStudent))
-	//   enrollmentCtl.RegisterStudent(studentGroup)
-	//   teacherGroup := srv.Authed().Group("/teacher", middleware.RequireRole(identity.RoleTeacher))
-	//   rosterCtl.RegisterTeacher(teacherGroup)
+	// 账号列表：与上面声明的建号接口配成一对，
+	// 否则前端只能建账号、看不到列表。声明在装配层是为了不改 RegisterAdmin 的签名。
+	adminGroup.GET("/users", middleware.RequirePerm(perms.UserWrite), identityCtl.AdminListUsers)
+	adminGroup.PATCH("/users/:id", middleware.RequirePerm(perms.UserWrite), identityCtl.AdminUpdateUser)
+
+	// 课程域：学期、课程主数据、开课班次、选课名单
+	courseCtl := course.NewController(course.NewService(db, log))
+	courseCtl.Register(srv.Authed(), adminGroup)
+
+	// 选课域：轮次、抢课、退课、我的课表
+	enrollmentCtl := enrollment.NewController(enrollment.NewService(db, log))
+	enrollmentCtl.Register(srv.Authed(), adminGroup)
 
 	return srv.Run(ctx)
 }

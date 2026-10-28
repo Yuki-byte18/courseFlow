@@ -2,41 +2,144 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #f5f6f8;
+  background: var(--cf-bg);
 }
 
+/* ---------- 顶部导航 ---------- */
+
 .basic-layout__header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 0 24px;
+  gap: 24px;
+  flex: none;
   height: 56px;
-  background: #ffffff;
-  border-bottom: 1px solid #eaecef;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--cf-hair);
+  background: var(--cf-bg);
+}
+
+.basic-layout__left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
 }
 
 .basic-layout__brand {
-  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: -0.01em;
+  color: var(--cf-ink);
 }
 
-.basic-layout__user {
+.basic-layout__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--cf-gold);
+}
+
+.basic-layout__nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.basic-layout__nav::-webkit-scrollbar {
+  display: none;
+}
+
+.basic-layout__link {
+  flex: none;
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--cf-ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease;
+}
+
+.basic-layout__link:hover {
+  color: var(--cf-ink);
+  background: rgba(29, 29, 31, 0.04);
+}
+
+/* 当前页：暖金底 + 深色字，是导航里唯一的彩度 */
+.basic-layout__link--active {
+  color: var(--cf-ink);
+  background: var(--cf-gold-soft);
+  font-weight: 600;
+}
+
+.basic-layout__right {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: none;
+}
+
+.basic-layout__role {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--cf-hair);
+  font-size: 11.5px;
+  color: var(--cf-ink-2);
 }
 
 .basic-layout__name {
-  font-size: 14px;
-  color: rgba(0, 0, 0, 0.75);
+  font-size: 13.5px;
+  color: var(--cf-ink);
 }
+
+/* ---------- 内容区 ---------- */
 
 .basic-layout__content {
   flex: 1;
-  padding: 24px;
-  background: #ffffff;
-  margin: 16px 24px 24px;
-  border-radius: 8px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 32px 56px;
+}
+
+@media (max-width: 860px) {
+  .basic-layout__header {
+    padding: 0 20px;
+    gap: 16px;
+  }
+
+  .basic-layout__left {
+    gap: 16px;
+  }
+
+  .basic-layout__role {
+    display: none;
+  }
+
+  .basic-layout__content {
+    padding: 20px 20px 40px;
+  }
+}
+
+@media (max-width: 560px) {
+  .basic-layout__brand {
+    font-size: 0;
+  }
+
+  .basic-layout__name {
+    display: none;
+  }
 }

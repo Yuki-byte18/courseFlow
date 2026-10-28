@@ -71,7 +71,8 @@ func RequireRole(codes ...string) gin.HandlerFunc {
 			return
 		}
 		if !u.HasRole(codes...) {
-			abortForbidden(c, "当前角色无权访问该资源")
+			// 把要求的角色写进文案：否则调用方看到「无权访问」只能靠猜
+			abortForbidden(c, "需要以下角色之一："+strings.Join(codes, " / "))
 			return
 		}
 		c.Next()
@@ -80,7 +81,8 @@ func RequireRole(codes ...string) gin.HandlerFunc {
 
 // RequirePerm 要求当前用户拥有任意一个给定权限码。
 //
-// 权限码来自 JWT 里的 perms，所以这里不查库。
+// 权限码来自 JWT 里的 perms，所以这里不查库 ——
+// 这也意味着**权限变更后必须重新登录才会生效**。
 // 必须挂在 RequireAuth 之后。
 func RequirePerm(codes ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -90,7 +92,11 @@ func RequirePerm(codes ...string) gin.HandlerFunc {
 			return
 		}
 		if !u.HasPerm(codes...) {
-			abortForbidden(c, "缺少所需权限")
+			// 文案里带上具体权限码：这是排查「为什么 403」的唯一线索。
+			// 对已登录用户暴露"你需要什么权限"不构成信息泄露，反而省掉很多来回。
+			abortWithCode(c, http.StatusForbidden, "missing_permission",
+				"缺少所需权限："+strings.Join(codes, " / ")+
+					"（如刚被授予权限，请重新登录使其生效）")
 			return
 		}
 		c.Next()

@@ -12,8 +12,11 @@ package perms
 const (
 	OfferingRead  = "offering:read"
 	OfferingWrite = "offering:write"
-	CourseRead    = "course:read"
-	CourseWrite   = "course:write"
+	// OfferingImport 教师批量导入自己的授课课表。
+	// 服务端会强制把 teacher_id 设为当前登录用户，所以它不等于"随便开班"。
+	OfferingImport = "offering:import"
+	CourseRead     = "course:read"
+	CourseWrite    = "course:write"
 )
 
 // 学生端。
@@ -53,7 +56,7 @@ const (
 // 如果新增了常量却忘了加进 All()，对应的单测会失败。
 func All() []string {
 	return []string{
-		OfferingRead, OfferingWrite, CourseRead, CourseWrite,
+		OfferingRead, OfferingWrite, OfferingImport, CourseRead, CourseWrite,
 		ScheduleRead, EnrollmentRead, EnrollmentCreate, EnrollmentDrop,
 		EnrollmentForceDrop, EnrollmentSupplement,
 		RoundRead, RoundWrite, StockPreheat, UserWrite,

@@ -139,3 +139,45 @@ function extractError(payload: unknown): {
     requestId: error?.request_id,
   }
 }
+
+/**
+ * 下载一个需要鉴权的文件（目前只有选课名单 CSV）。
+ *
+ * 为什么不能直接用 `<a href>` 或 window.open：
+ * 浏览器不会为导航请求带 Authorization 头，后端会返回 401。
+ * 所以必须自己 fetch 拿 Blob，再用临时 object URL 触发下载。
+ */
+export async function downloadFile(path: string): Promise<void> {
+  const headers: Record<string, string> = {}
+  const token = getToken()
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, { headers })
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      unauthorizedHandler?.()
+    }
+    const raw = await response.text()
+    const parsed = extractError(parseJson(raw))
+    throw new ApiError(parsed.code, parsed.message, response.status, parsed.requestId)
+  }
+
+  const blob = await response.blob()
+
+  // 后端用 RFC 5987 的 filename* 传中文名，取不到就退回默认名
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition)
+  const filename = encoded ? decodeURIComponent(encoded[1]) : 'download.csv'
+
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
