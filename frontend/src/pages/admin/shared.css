@@ -1,0 +1,122 @@
+/* 管理端三个页面共用的版式，避免同一套表格/表单样式写三遍 */
+
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-toolbar__search {
+  max-width: 280px;
+}
+
+.admin-table {
+  border: 1px solid var(--cf-hair);
+  border-radius: var(--cf-radius-card);
+  overflow: hidden;
+  background: var(--cf-surface);
+}
+
+.admin-hint {
+  padding: 10px 14px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 12px;
+  background: var(--cf-gold-soft);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--cf-gold-ink);
+}
+
+.admin-mono {
+  font-family: var(--cf-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--cf-ink-2);
+}
+
+.admin-sub {
+  display: block;
+  font-family: var(--cf-mono);
+  font-size: 11.5px;
+  color: var(--cf-ink-3);
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+
+.admin-form-grid--full {
+  grid-column: 1 / -1;
+}
+
+/* ---------- 班次编辑：时间段列表 ---------- */
+
+.slot-list {
+  margin-bottom: 8px;
+}
+
+.slot-list__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  color: var(--cf-ink-2);
+}
+
+.slot-list__empty {
+  padding: 10px 0;
+  font-size: 12px;
+  color: var(--cf-ink-3);
+}
+
+.slot-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.slot-row__sep {
+  color: var(--cf-ink-3);
+}
+
+/* ---------- 名单抽屉 ---------- */
+
+.roster-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.roster-tools__meta {
+  font-size: 13px;
+  color: var(--cf-ink-2);
+}
+
+.roster-tools__supplement {
+  margin-bottom: 14px;
+}
+
+@media (max-width: 640px) {
+  .admin-toolbar__search {
+    width: 100%;
+    max-width: none;
+  }
+
+  .admin-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

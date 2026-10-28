@@ -1,0 +1,116 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ---------- 轮次状态条 ---------- */
+
+.board__round {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 14px;
+  background: var(--cf-surface);
+  font-size: 13px;
+  color: var(--cf-ink-2);
+}
+
+.board__round-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cf-ok);
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.15);
+}
+
+.board__round-name {
+  font-weight: 600;
+  color: var(--cf-ink);
+}
+
+.board__round-sep {
+  color: var(--cf-ink-3);
+}
+
+.board__round-credits {
+  font-family: var(--cf-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.board__round-reason {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(192, 57, 43, 0.08);
+  color: var(--cf-danger);
+  font-size: 12px;
+}
+
+.board__round--closed .board__round-dot {
+  background: var(--cf-ink-3);
+  box-shadow: none;
+}
+
+/* ---------- 筛选 ---------- */
+
+.board__filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.board__term {
+  min-width: 200px;
+}
+
+.board__search {
+  max-width: 300px;
+}
+
+/* ---------- 表格 ---------- */
+
+.board__table {
+  border: 1px solid var(--cf-hair);
+  border-radius: var(--cf-radius-card);
+  overflow: hidden;
+  background: var(--cf-surface);
+}
+
+.cell-course {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.cell-course__name {
+  font-weight: 600;
+  color: var(--cf-ink);
+}
+
+.cell-course__meta {
+  font-family: var(--cf-mono);
+  font-size: 11.5px;
+  color: var(--cf-ink-3);
+}
+
+.cell-mono {
+  font-family: var(--cf-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--cf-ink-2);
+}
+
+@media (max-width: 640px) {
+  .board__term,
+  .board__search {
+    width: 100%;
+    max-width: none;
+  }
+}

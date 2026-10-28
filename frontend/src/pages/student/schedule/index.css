@@ -1,0 +1,213 @@
+.schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.schedule__summary {
+  padding: 6px 14px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 999px;
+  font-family: var(--cf-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--cf-ink-2);
+  background: var(--cf-surface);
+}
+
+.schedule__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 312px;
+  gap: 18px;
+  align-items: start;
+}
+
+/* ==========================================================================
+   周视图
+   ========================================================================== */
+
+/*
+ * 单个 grid 平铺：第一列节次、后面七列是周一到周日。
+ * 格子之间不能有 gap —— 跨节的课要靠相邻格子拼成一块。
+ */
+.timetable {
+  display: grid;
+  grid-template-columns: 52px repeat(7, minmax(0, 1fr));
+  border: 1px solid var(--cf-hair);
+  border-radius: var(--cf-radius-card);
+  overflow: hidden;
+  background: var(--cf-surface);
+}
+
+.timetable--loading {
+  opacity: 0.55;
+}
+
+.timetable__corner,
+.timetable__day {
+  padding: 10px 6px;
+  background: #fcfbf8;
+  border-bottom: 1px solid var(--cf-hair-2);
+  font-size: 12px;
+  color: var(--cf-ink-2);
+  text-align: center;
+}
+
+.timetable__corner {
+  font-family: var(--cf-mono);
+  font-size: 11px;
+  color: var(--cf-ink-3);
+}
+
+.timetable__day:not(:last-child) {
+  border-right: 1px solid var(--cf-hair-2);
+}
+
+.timetable__period {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border-right: 1px solid var(--cf-hair);
+  border-bottom: 1px solid var(--cf-hair-2);
+  font-family: var(--cf-mono);
+  font-size: 11.5px;
+  color: var(--cf-ink-3);
+  background: #fcfbf8;
+}
+
+.timetable__cell {
+  min-height: 46px;
+  padding: 3px;
+  border-right: 1px solid var(--cf-hair-2);
+  border-bottom: 1px solid var(--cf-hair-2);
+}
+
+.timetable__cell:last-child {
+  border-right: 0;
+}
+
+/* 有课的格子：暖金底，相邻格子拼成连续的块 */
+.timetable__cell--filled {
+  background: var(--cf-gold-soft);
+}
+
+.course-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 7px;
+  border-radius: 8px;
+  background: var(--cf-surface);
+  border: 1px solid rgba(242, 181, 68, 0.4);
+  overflow: hidden;
+}
+
+.course-chip__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cf-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.course-chip__meta {
+  font-size: 10.5px;
+  color: var(--cf-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   已选课程清单
+   ========================================================================== */
+
+.schedule__list {
+  border: 1px solid var(--cf-hair);
+  border-radius: var(--cf-radius-card);
+  background: var(--cf-surface);
+  overflow: hidden;
+}
+
+.schedule__list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--cf-hair-2);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cf-ink);
+}
+
+.schedule__list-count {
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--cf-gold-soft);
+  color: var(--cf-gold-ink);
+  font-family: var(--cf-mono);
+  font-size: 11.5px;
+}
+
+.schedule__empty {
+  padding: 32px 0;
+}
+
+.enrolled {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.enrolled__item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--cf-hair-2);
+}
+
+.enrolled__item:last-child {
+  border-bottom: 0;
+}
+
+.enrolled__main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.enrolled__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--cf-ink);
+}
+
+.enrolled__meta,
+.enrolled__slots,
+.enrolled__time {
+  font-family: var(--cf-mono);
+  font-size: 11px;
+  color: var(--cf-ink-3);
+}
+
+.enrolled__slots {
+  color: var(--cf-ink-2);
+}
+
+@media (max-width: 1024px) {
+  .schedule__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .enrolled {
+    max-height: none;
+  }
+}

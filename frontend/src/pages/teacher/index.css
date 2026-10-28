@@ -1,0 +1,138 @@
+.teacher {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.teacher__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.teacher__table {
+  border: 1px solid var(--cf-hair);
+  border-radius: var(--cf-radius-card);
+  overflow: hidden;
+  background: var(--cf-surface);
+}
+
+.teacher-sub {
+  display: block;
+  font-family: var(--cf-mono);
+  font-size: 11.5px;
+  color: var(--cf-ink-3);
+}
+
+.teacher-mono {
+  font-family: var(--cf-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--cf-ink-2);
+}
+
+.teacher__roster-meta {
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--cf-ink-2);
+}
+
+.teacher__lack {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.9;
+}
+
+.teacher__lack code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.75);
+  font-family: var(--cf-mono);
+  font-size: 11.5px;
+}
+
+/* ==========================================================================
+   一键导入
+   ========================================================================== */
+
+.import {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.import__hint {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 12px;
+  background: var(--cf-gold-soft);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--cf-gold-ink);
+}
+
+.import__hint code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.7);
+  font-family: var(--cf-mono);
+  font-size: 11.5px;
+}
+
+.import__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.import__stat {
+  font-size: 12.5px;
+  color: var(--cf-ink-2);
+}
+
+.import__stat strong {
+  color: var(--cf-ink);
+}
+
+.import__stat-error {
+  color: var(--cf-danger);
+}
+
+.import__input textarea,
+.import__input {
+  font-family: var(--cf-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.import__errors {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.import__result {
+  padding: 12px 14px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 12px;
+  background: #fcfbf8;
+}
+
+.import__summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.import__lines {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--cf-ink-2);
+}

@@ -1,0 +1,46 @@
+/*
+ * 全局设计令牌：暖白 + 暖金，与登录页同一套语言。
+ *
+ * 为什么放在 CSS 变量里而不是 JS 常量：
+ * 应用页面的样式大量写在 .css 里，用变量才能和 antd 的 token 对齐同一个色值，
+ * 改一处全站生效。antd 的主题在 src/theme/appTheme.ts，两边数值必须一致。
+ */
+:root {
+  /* 表面 */
+  --cf-bg: #fbf9f4;
+  --cf-bg-2: #f5f1e8;
+  --cf-surface: #ffffff;
+  --cf-field: #f5f3ee;
+
+  /* 文字 */
+  --cf-ink: #1d1d1f;
+  --cf-ink-2: #6e6e73;
+  --cf-ink-3: #a1a1a6;
+
+  /* 分隔 */
+  --cf-hair: #e8e4da;
+  --cf-hair-2: #efece4;
+
+  /* 唯一强调色 */
+  --cf-gold: #f2b544;
+  --cf-gold-hi: #f7c25c;
+  --cf-gold-soft: rgba(242, 181, 68, 0.14);
+  --cf-gold-ring: rgba(242, 181, 68, 0.22);
+  --cf-gold-ink: #9a6c12;
+
+  /* 语义色 */
+  --cf-ok: #34c759;
+  --cf-danger: #c0392b;
+
+  /* 形状与阴影 */
+  --cf-radius-card: 18px;
+  --cf-radius-field: 12px;
+  --cf-shadow-card:
+    0 1px 2px rgba(29, 29, 31, 0.04),
+    0 8px 28px rgba(29, 29, 31, 0.06);
+  --cf-shadow-raise:
+    0 1px 2px rgba(29, 29, 31, 0.05),
+    0 12px 32px rgba(29, 29, 31, 0.08);
+
+  --cf-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
