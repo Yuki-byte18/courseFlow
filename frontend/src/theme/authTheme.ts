@@ -1,48 +1,53 @@
 import { theme, type ThemeConfig } from 'antd'
 
 /**
- * 登录 / 注册页专用主题：赛博朋克（近黑底 + 青/品红双霓虹）。
+ * 登录 / 注册页主题：暖白画布 + 暖金强调色 + 填充式圆角控件。
  *
- * 用 antd 的 darkAlgorithm 处理所有状态对比度，我们只调少量 token，
- * CSS 才能保持短。圆角统一 0 —— 直角属于终端与图纸，不属于卡片。
+ * 参考 getdesign.md / Apple（"Premium white space, SF Pro"）。
+ *
+ * 只调 token 不覆写状态色：defaultAlgorithm 会据此推导出
+ * 悬停、聚焦、禁用、错误的整套色阶，CSS 里几乎不用写颜色。
+ *
+ * 这个主题只作用于登录/注册子树；后台业务页仍用全局主题。
  */
 export const authTheme: ThemeConfig = {
-  algorithm: theme.darkAlgorithm,
+  algorithm: theme.defaultAlgorithm,
   token: {
-    colorPrimary: '#22d3ee',
-    colorBgBase: '#070b14',
-    colorBgContainer: 'transparent',
-    colorText: '#e8eef7',
-    colorTextPlaceholder: 'rgba(232, 238, 247, 0.26)',
-    colorBorder: 'rgba(34, 211, 238, 0.24)',
-    colorError: '#ff4d6d',
-    borderRadius: 0,
-    controlHeight: 44,
-    fontSize: 14,
+    colorPrimary: '#f2b544',
+    colorBgBase: '#fbf9f4',
+    colorBgContainer: '#f5f3ee',
+    colorText: '#1d1d1f',
+    colorTextPlaceholder: '#a1a1a6',
+    colorBorder: '#e8e4da',
+    colorError: '#c0392b',
+    // Apple 的圆角偏大：12px 用于控件，20px 用于卡片（卡片在 CSS 里）
+    borderRadius: 12,
+    controlHeight: 48,
+    fontSize: 16,
     fontFamily: 'inherit',
   },
   components: {
-    // 输入框去掉自带边框，改由 CSS 在下划线容器上画线
     Input: {
-      paddingInline: 0,
+      paddingInline: 14,
       activeShadow: 'none',
       hoverBorderColor: 'transparent',
       activeBorderColor: 'transparent',
+      colorBgContainer: '#f5f3ee',
     },
     Button: {
-      controlHeight: 48,
+      controlHeight: 52,
       fontWeight: 600,
       primaryShadow: 'none',
     },
     Form: {
-      labelColor: 'rgba(219, 230, 242, 0.38)',
-      labelFontSize: 11,
-      itemMarginBottom: 22,
+      labelColor: '#6e6e73',
+      labelFontSize: 12.5,
+      itemMarginBottom: 20,
       verticalLabelPadding: '0 0 8px',
     },
     Alert: {
-      colorErrorBg: 'rgba(255, 77, 109, 0.08)',
-      colorErrorBorder: 'rgba(255, 77, 109, 0.32)',
+      colorErrorBg: '#fdf1ef',
+      colorErrorBorder: '#efc9c3',
     },
   },
 }
