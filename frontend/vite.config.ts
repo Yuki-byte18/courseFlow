@@ -11,6 +11,9 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:8080',
         changeOrigin: true,
+        // Agent SSE 可能跑几分钟。默认超时会让开发期流在 ~120s 被掐断。
+        timeout: 0,
+        proxyTimeout: 0,
       },
     },
   },

@@ -1,0 +1,20 @@
+# courseFlow Agent —— 运行依赖
+#
+# 只装真正需要的：
+#   fastapi/uvicorn  提供 HTTP + SSE
+#   httpx            调用 DeepSeek（异步、支持流式）
+#   pymysql          直接读业务库（工具层要查课程/余量/课表）
+#   langsmith        可观测（可选，没有 API Key 时自动跳过）
+#
+# 刻意不引入 LangChain / LlamaIndex 这类框架：
+# 六层架构的每一层都要能说清"为什么这么设计"，
+# 框架会把编排、工具调度、记忆的边界全部吃掉，正好吃掉我们要展示的东西。
+
+fastapi>=0.115
+uvicorn[standard]>=0.32
+httpx>=0.27
+pymysql>=1.1
+langsmith>=0.1
+
+# 开发期可选：跑 pytest 做沙箱与 AST 守卫的单元测试
+pytest>=8.0

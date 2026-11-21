@@ -24,12 +24,18 @@ import (
 	"courseflow/internal/platform/mysql"
 )
 
-/** 关注的权限点 */
-const targetPerm = "offering:import"
+/**
+ * 默认关注的权限点。
+ *
+ * 用变量而不是常量：-perm 参数要覆盖它，
+ * 除了 offering:import，还能查 agent:chat 之类的新权限点。
+ */
+var targetPerm = "offering:import"
 
 func main() {
 	username := flag.String("user", "", "额外检查某个账号的角色与权限")
 	listCourses := flag.Int("courses", 0, "列出前 N 个课程的课程号（导入课表时要用）")
+	flag.StringVar(&targetPerm, "perm", targetPerm, "检查哪个权限点授予了哪些角色")
 	flag.Parse()
 
 	if err := run(*username, *listCourses); err != nil {

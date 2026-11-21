@@ -100,11 +100,6 @@
   color: var(--cf-ink-2);
 }
 
-.basic-layout__name {
-  font-size: 13.5px;
-  color: var(--cf-ink);
-}
-
 /* ---------- 内容区 ---------- */
 
 .basic-layout__content {
@@ -137,9 +132,5 @@
 @media (max-width: 560px) {
   .basic-layout__brand {
     font-size: 0;
-  }
-
-  .basic-layout__name {
-    display: none;
   }
 }

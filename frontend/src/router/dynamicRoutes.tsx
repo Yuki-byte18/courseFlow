@@ -4,6 +4,8 @@ import { AdminOfferingsPage } from '../pages/admin/offerings'
 import { AdminRoundsPage } from '../pages/admin/rounds'
 import { AdminTermsPage } from '../pages/admin/terms'
 import { AdminUsersPage } from '../pages/admin/users'
+import { AgentChatPage } from '../pages/agent'
+import { AgentTracePage } from '../pages/agent/trace'
 import { StudentHomePage } from '../pages/student'
 import { StudentSchedulePage } from '../pages/student/schedule'
 import { TeacherHomePage } from '../pages/teacher'
@@ -51,6 +53,17 @@ export const dynamicRoutes: AppRoute[] = [
       { path: 'offerings', element: <AdminOfferingsPage /> },
       { path: 'rounds', element: <AdminRoundsPage /> },
       { path: 'users', element: <AdminUsersPage /> },
+    ],
+  },
+  {
+    // Agent 是三端共用的能力，所以挂在顶层而不是 /student 下。
+    // 用权限码而不是角色做门禁：谁有 agent:chat，谁就能用。
+    path: '/agent',
+    element: <BasicLayout />,
+    meta: { title: 'Agent', perms: ['agent:chat'] },
+    children: [
+      { index: true, element: <AgentChatPage /> },
+      { path: 'trace', element: <AgentTracePage /> },
     ],
   },
 ]

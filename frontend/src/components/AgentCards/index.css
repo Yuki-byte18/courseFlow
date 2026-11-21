@@ -1,0 +1,350 @@
+/* ==========================================================================
+   业务卡片
+   --------------------------------------------------------------------------
+   设计取向：**信息靠排版分层，不靠边框堆叠**。
+   一张卡片只有一个外框，内部用发丝线分隔；数字一律等宽字体右对齐。
+   ========================================================================== */
+
+.card {
+  border: 1px solid var(--cf-hair);
+  border-radius: 14px;
+  background: var(--cf-surface);
+  overflow: hidden;
+}
+
+.card--empty {
+  padding: 14px 16px;
+  font-size: 12.5px;
+  color: var(--cf-ink-3);
+}
+
+.card--ok {
+  border-color: rgba(52, 199, 89, 0.32);
+}
+
+.card--error {
+  border-color: rgba(192, 57, 43, 0.28);
+}
+
+.card--warn {
+  border-color: rgba(242, 181, 68, 0.42);
+}
+
+/* ---------- 头部 ---------- */
+
+.card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px 9px;
+  border-bottom: 1px solid var(--cf-hair-2);
+}
+
+.card__title {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--cf-ink);
+}
+
+.card__meta {
+  flex: none;
+  font-family: var(--cf-mono);
+  font-size: 10.5px;
+  color: var(--cf-ink-3);
+}
+
+/* ---------- 课程行 ---------- */
+
+.olist {
+  display: flex;
+  flex-direction: column;
+}
+
+.olist__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--cf-hair-2);
+  transition: background 0.14s ease;
+}
+
+.olist__row:first-child {
+  border-top: none;
+}
+
+.olist__row:hover {
+  background: #fdfcf9;
+}
+
+.olist__row--tight {
+  padding: 9px 14px;
+}
+
+.olist__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.olist__line1 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.olist__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cf-ink);
+}
+
+.olist__credits {
+  flex: none;
+  font-family: var(--cf-mono);
+  font-size: 10.5px;
+  color: var(--cf-gold-ink);
+}
+
+.olist__line2 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--cf-ink-3);
+}
+
+.olist__code {
+  font-family: var(--cf-mono);
+}
+
+.olist__teacher {
+  color: var(--cf-ink-2);
+}
+
+.olist__line3 {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--cf-ink-3);
+}
+
+.olist__dot {
+  opacity: 0.5;
+}
+
+.olist__side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+/* ---------- 余量胶囊 ---------- */
+
+.pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-family: var(--cf-mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pill i {
+  font-style: normal;
+  font-size: 9.5px;
+  opacity: 0.55;
+}
+
+.pill--ok {
+  background: rgba(52, 199, 89, 0.1);
+  color: #1f7a3d;
+}
+
+.pill--low {
+  background: var(--cf-gold-soft);
+  color: var(--cf-gold-ink);
+}
+
+.pill--full {
+  background: var(--cf-field);
+  color: var(--cf-ink-3);
+}
+
+/* ---------- 动作按钮 ---------- */
+
+.card__btn {
+  padding: 2px 11px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 999px;
+  background: var(--cf-surface);
+  font-size: 11px;
+  color: var(--cf-ink-2);
+  cursor: pointer;
+  transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
+}
+
+.card__btn:hover:not(:disabled) {
+  border-color: var(--cf-gold);
+  background: var(--cf-gold-soft);
+  color: var(--cf-gold-ink);
+}
+
+.card__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------- 详情 ---------- */
+
+.detail {
+  padding: 12px 14px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail__grid {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 6px 12px;
+  align-items: baseline;
+}
+
+.detail__grid--dense {
+  padding: 12px 14px 13px;
+  gap: 5px 12px;
+}
+
+.detail__k {
+  font-size: 11px;
+  color: var(--cf-ink-3);
+}
+
+.detail__v {
+  font-family: var(--cf-mono);
+  font-size: 11.5px;
+  color: var(--cf-ink);
+}
+
+.detail__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cf-hair-2);
+}
+
+/* ---------- 学分 ---------- */
+
+.credit {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 13px 14px 0;
+}
+
+.credit__value {
+  font-family: var(--cf-mono);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--cf-ink);
+}
+
+.credit__max {
+  font-family: var(--cf-mono);
+  font-size: 12px;
+  color: var(--cf-ink-3);
+}
+
+.credit__count {
+  margin-left: auto;
+  font-family: var(--cf-mono);
+  font-size: 11px;
+  color: var(--cf-ink-3);
+}
+
+.credit__bar {
+  height: 5px;
+  margin: 9px 14px 0;
+  border-radius: 999px;
+  background: var(--cf-field);
+  overflow: hidden;
+}
+
+.credit__bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--cf-gold);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.credit__tip {
+  padding: 8px 14px 13px;
+  font-size: 11px;
+  color: var(--cf-ink-3);
+}
+
+/* ---------- 结果 / 通知 ---------- */
+
+.result {
+  padding: 12px 14px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.result__line {
+  font-size: 12.5px;
+  color: var(--cf-ink);
+}
+
+.result__sub {
+  font-family: var(--cf-mono);
+  font-size: 10.5px;
+  color: var(--cf-ink-3);
+}
+
+.result__msg {
+  font-size: 12px;
+  color: var(--cf-ink-2);
+}
+
+.notice {
+  padding: 12px 14px 13px;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--cf-ink-2);
+  white-space: pre-wrap;
+}
+
+/* ---------- 兜底 ---------- */
+
+.card__json {
+  margin: 0;
+  padding: 10px 14px 13px;
+  max-height: 200px;
+  overflow: auto;
+  font-family: var(--cf-mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--cf-ink-2);
+}

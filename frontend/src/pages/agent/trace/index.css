@@ -1,0 +1,406 @@
+/* ==========================================================================
+   Agent Trace 观测面板
+   --------------------------------------------------------------------------
+   布局：指标条（顶部） + 左列表 + 右详情。
+   设计语言沿用整站：暖白底、一根发丝线、数字用等宽字体。
+   ========================================================================== */
+
+.trace {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* 和 Agent 对话页一致：撑满可视区，左右两列各自滚动 */
+  height: calc(100vh - 140px);
+  min-height: 480px;
+}
+
+/* ---------- 指标条 ---------- */
+
+.trace__metrics {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 10px 4px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 14px;
+  background: var(--cf-surface);
+}
+
+.trace__metric {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-right: 1px solid var(--cf-hair);
+}
+
+.trace__metric:last-child {
+  border-right: none;
+}
+
+.trace__metric--note {
+  flex: 0 0 auto;
+  justify-content: center;
+}
+
+.trace__metric-value {
+  font-family: var(--cf-mono);
+  font-size: 15px;
+  line-height: 1.2;
+  color: var(--cf-ink);
+}
+
+.trace__metric-label {
+  font-size: 10.5px;
+  line-height: 1.2;
+  color: var(--cf-ink-3);
+  white-space: nowrap;
+}
+
+/* ---------- 主体：左列表 + 右详情 ---------- */
+
+.trace__body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 288px minmax(0, 1fr);
+  gap: 14px;
+}
+
+/* ---------- 左：运行列表 ---------- */
+
+.trace__list {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 14px;
+  background: var(--cf-surface);
+}
+
+.trace__list-hint {
+  padding: 18px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--cf-ink-3);
+}
+
+.trow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease;
+}
+
+.trow:hover {
+  background: var(--cf-bg-2);
+}
+
+.trow--active {
+  border-color: var(--cf-hair);
+  background: var(--cf-bg-2);
+}
+
+.trow__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--cf-ink-3);
+}
+
+.trow__dot--running {
+  background: var(--cf-gold);
+  box-shadow: 0 0 0 3px var(--cf-gold-soft);
+}
+
+.trow__dot--ok {
+  background: var(--cf-ok);
+}
+
+.trow__dot--failed {
+  background: var(--cf-danger);
+}
+
+.trow__dot--muted {
+  background: var(--cf-hair);
+}
+
+.trow__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.trow__title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--cf-ink-2);
+}
+
+.trow--active .trow__title {
+  color: var(--cf-ink);
+}
+
+.trow__meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--cf-mono);
+  font-size: 10px;
+  color: var(--cf-ink-3);
+}
+
+.trow__sep {
+  opacity: 0.5;
+}
+
+/* ---------- 右：详情 ---------- */
+
+.trace__detail {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px 20px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 14px;
+  background: var(--cf-surface);
+}
+
+.trace__detail-hint {
+  padding: 24px;
+  text-align: center;
+}
+
+.trace__head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cf-hair);
+}
+
+.trace__head-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.trace__head-title h2 {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--cf-ink);
+}
+
+.trace__head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+/* 元信息小胶囊：标签暗、值亮，扫一眼就能读数 */
+.tchip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--cf-bg-2);
+}
+
+.tchip__label {
+  font-size: 10px;
+  color: var(--cf-ink-3);
+}
+
+.tchip__value {
+  font-family: var(--cf-mono);
+  font-size: 11px;
+  color: var(--cf-ink-2);
+}
+
+/* ---------- 步骤时间轴 ---------- */
+
+.tsteps {
+  display: flex;
+  flex-direction: column;
+  padding-left: 10px;
+  border-left: 1px solid var(--cf-hair);
+}
+
+.tstep {
+  position: relative;
+  padding: 5px 0;
+}
+
+.tstep__dot {
+  position: absolute;
+  left: -13px;
+  top: 12px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cf-hair);
+}
+
+.tstep--ok .tstep__dot {
+  background: var(--cf-ok);
+}
+
+.tstep--gold .tstep__dot {
+  background: var(--cf-gold);
+}
+
+.tstep--failed .tstep__dot {
+  background: var(--cf-danger);
+}
+
+.tstep__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 4px;
+}
+
+.tstep__line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.tstep__seq {
+  flex: none;
+  font-family: var(--cf-mono);
+  font-size: 10px;
+  color: var(--cf-ink-3);
+}
+
+.tstep__kind {
+  flex: none;
+  color: var(--cf-ink-2);
+}
+
+.tstep__agent {
+  flex: none;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--cf-gold-soft);
+  font-size: 9.5px;
+  color: var(--cf-gold-ink);
+}
+
+.tstep__name {
+  flex: none;
+  font-family: var(--cf-mono);
+  font-size: 11px;
+  color: var(--cf-ink-3);
+}
+
+.tstep__spacer {
+  flex: 1;
+}
+
+.tstep__ms {
+  flex: none;
+  font-family: var(--cf-mono);
+  font-size: 10px;
+  color: var(--cf-ink-3);
+}
+
+.tstep__error {
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: rgba(214, 74, 64, 0.08);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--cf-danger);
+}
+
+.tstep__raw {
+  font-size: 11px;
+  color: var(--cf-ink-3);
+}
+
+.tstep__raw summary {
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 0;
+}
+
+.tstep__raw summary:hover {
+  color: var(--cf-ink-2);
+}
+
+.tstep__raw-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 5px 0 2px;
+}
+
+.tstep__raw-label {
+  font-size: 10px;
+  color: var(--cf-ink-3);
+}
+
+.tstep__raw pre {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--cf-bg-2);
+  max-height: 240px;
+  overflow: auto;
+  font-family: var(--cf-mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--cf-ink-2);
+}
+
+/* ---------- 窄屏：列表折到上面 ---------- */
+
+@media (max-width: 900px) {
+  .trace__body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .trace__list {
+    max-height: 180px;
+  }
+
+  .trace__metrics {
+    flex-wrap: wrap;
+  }
+
+  .trace__metric {
+    flex: 1 1 72px;
+  }
+}

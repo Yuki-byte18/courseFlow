@@ -101,10 +101,12 @@ func defaults() map[string]any {
 		"app.name": "courseflow",
 		"app.env":  "dev",
 
-		"server.host":             "0.0.0.0",
-		"server.port":             8080,
-		"server.read_timeout":     "10s",
-		"server.write_timeout":    "15s",
+		"server.host":         "0.0.0.0",
+		"server.port":         8080,
+		"server.read_timeout": "10s",
+		// SSE（Agent 对话）会持续写几分钟。15s 会把流掐断，
+		// 前端就停在某一步，看起来像任务卡死。
+		"server.write_timeout":    "10m",
 		"server.shutdown_timeout": "10s",
 
 		"log.level":  "debug",

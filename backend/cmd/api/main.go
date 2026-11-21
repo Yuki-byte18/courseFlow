@@ -18,6 +18,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"courseflow/internal/agent"
 	"courseflow/internal/course"
 	"courseflow/internal/enrollment"
 	"courseflow/internal/identity"
@@ -109,6 +110,16 @@ func run() error {
 	// 选课域：轮次、抢课、退课、我的课表
 	enrollmentCtl := enrollment.NewController(enrollment.NewService(db, log))
 	enrollmentCtl.Register(srv.Authed(), adminGroup)
+
+	// Agent 域。两块：
+	//   1. Key 校验（不查库，直接打 DeepSeek 的 /models）
+	//   2. 运行时代理（对话 SSE / 审批 / trace），转发给 Python Agent 服务
+	agentCfg := agent.RuntimeConfigFromEnv()
+	agentCtl := agent.NewController(agent.NewVerifier(agent.DefaultConfig(), log))
+	agentCtl.Register(srv.Authed())
+	agent.NewRuntimeController(db, agentCfg).RegisterRuntime(srv.Authed())
+
+	log.Info("Agent 代理已就绪", zap.String("agent_service", agentCfg.ServiceURL))
 
 	return srv.Run(ctx)
 }

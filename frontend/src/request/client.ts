@@ -25,6 +25,13 @@ export interface RequestOptions {
   query?: Record<string, string | number | boolean | undefined | null>
   /** 是否携带 Authorization 头，默认 true；登录/注册要传 false */
   auth?: boolean
+  /**
+   * 额外请求头。
+   *
+   * 目前只有一个用途：把用户自备的 DeepSeek Key 放进 X-LLM-Api-Key。
+   * 这类凭据走头部而不是请求体，语义更准确，也便于网关层配置「禁止记录」。
+   */
+  headers?: Record<string, string>
   /** 用于取消请求 */
   signal?: AbortSignal
 }
@@ -46,11 +53,11 @@ interface ErrorPayload {
  * 唯一的例外是 401：它清掉本地 token 并触发全局回调，因为"凭据失效"是全局事件。
  */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, query, auth = true, signal } = options
+  const { method = 'GET', body, query, auth = true, headers: extraHeaders, signal } = options
 
   const url = buildUrl(path, query)
 
-  const headers: Record<string, string> = { Accept: 'application/json' }
+  const headers: Record<string, string> = { Accept: 'application/json', ...extraHeaders }
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json'
   }
@@ -180,4 +187,95 @@ export async function downloadFile(path: string): Promise<void> {
   link.click()
   link.remove()
   URL.revokeObjectURL(url)
+}
+
+/** SSE 事件的回调。收到一条就调一次。 */
+export type SseHandler = (payload: Record<string, unknown>) => void
+
+/**
+ * 发起一个 SSE 流式请求（POST + 流式响应）。
+ *
+ * 为什么不用 EventSource：它只支持 GET，而且不能自定义请求头 ——
+ * 我们需要 POST 传消息体，还要带 Authorization 和 X-LLM-Api-Key。
+ *
+ * 解析按 SSE 规范：以空行分隔消息，每个消息里取 `data:` 行。
+ */
+export async function streamSSE(
+  path: string,
+  options: {
+    body: unknown
+    headers?: Record<string, string>
+    signal?: AbortSignal
+  },
+  onEvent: SseHandler
+): Promise<void> {
+  const headers: Record<string, string> = {
+    Accept: 'text/event-stream',
+    'Content-Type': 'application/json',
+    ...options.headers,
+  }
+
+  const token = getToken()
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(options.body),
+    signal: options.signal,
+  })
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      unauthorizedHandler?.()
+    }
+    const raw = await response.text()
+    const parsed = extractError(parseJson(raw))
+    throw new ApiError(parsed.code, parsed.message, response.status, parsed.requestId)
+  }
+
+  const reader = response.body?.getReader()
+  if (!reader) {
+    throw new ApiError('stream_unsupported', '当前浏览器不支持流式响应', 0)
+  }
+
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) {
+        break
+      }
+      buffer += decoder.decode(value, { stream: true })
+
+      // 消息之间以空行分隔
+      let boundary = buffer.indexOf('\n\n')
+      while (boundary >= 0) {
+        const chunk = buffer.slice(0, boundary)
+        buffer = buffer.slice(boundary + 2)
+
+        for (const line of chunk.split('\n')) {
+          if (!line.startsWith('data:')) {
+            continue // 注释行（心跳）和 event:/id: 都忽略
+          }
+          const payload = line.slice(5).trim()
+          if (!payload) {
+            continue
+          }
+          const parsed = parseJson(payload)
+          if (parsed && typeof parsed === 'object') {
+            onEvent(parsed as Record<string, unknown>)
+          }
+        }
+
+        boundary = buffer.indexOf('\n\n')
+      }
+    }
+  } finally {
+    reader.releaseLock()
+  }
 }

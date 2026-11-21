@@ -1,0 +1,483 @@
+/* ==========================================================================
+   Agent 对话页
+   --------------------------------------------------------------------------
+   固定高度外壳：顶栏固定、消息区独立滚动、输入框钉在底部。
+   高度用 calc(100vh - ...) 算，而不是 height:100% ——
+   因为父级 .basic-layout__content 是 flex:1，没有确定高度，
+   height:100% 会退化成 auto，输入框就会跟着内容滚走。
+   ========================================================================== */
+
+.agent {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 140px);
+  min-height: 480px;
+  margin: -12px 0 -40px;
+  overflow: hidden;
+}
+
+.agent--setup {
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  overflow: visible;
+}
+
+/* ---------- 顶栏 ---------- */
+
+.agent__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: none;
+  height: 44px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--cf-hair);
+}
+
+.agent__top-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.agent__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--cf-ink);
+}
+
+.agent__subtitle {
+  font-size: 12px;
+  color: var(--cf-ink-3);
+}
+
+.agent__top-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+}
+
+.agent__model {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 999px;
+  background: var(--cf-surface);
+  font-family: var(--cf-mono);
+  font-size: 11px;
+  color: var(--cf-ink-2);
+}
+
+.agent__model-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cf-ok);
+}
+
+.agent__link {
+  font-size: 12px;
+  color: var(--cf-gold-ink);
+  text-decoration: none;
+}
+
+.agent__link:hover {
+  text-decoration: underline;
+}
+
+.agent__setup-body {
+  padding: 28px 4px;
+}
+
+/* ---------- 主体 ---------- */
+
+.agent__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---------- 左栏 ---------- */
+
+.agent__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 184px;
+  flex: none;
+  padding: 14px 12px 14px 0;
+  border-right: 1px solid var(--cf-hair);
+}
+
+.agent__new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  border: 1px dashed var(--cf-hair);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 12px;
+  color: var(--cf-ink-2);
+  cursor: pointer;
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+}
+
+.agent__new:hover {
+  border-color: var(--cf-gold);
+  background: var(--cf-gold-soft);
+  color: var(--cf-gold-ink);
+}
+
+.agent__new-plus {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.agent__threads {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.agent__threads::-webkit-scrollbar {
+  width: 4px;
+}
+
+.agent__threads::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  background: var(--cf-hair);
+}
+
+.agent__threads-empty {
+  padding: 10px 4px;
+  font-size: 11.5px;
+  color: var(--cf-ink-3);
+}
+
+/* 一行 = 会话按钮 + 删除按钮。
+   删除按钮平时透明，鼠标移到这一行才出现 —— 既有入口又不干扰阅读。 */
+.agent__thread-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.agent__thread {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease;
+}
+
+.agent__thread:hover {
+  background: var(--cf-bg-2);
+}
+
+.agent__thread--active {
+  border-color: var(--cf-hair);
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-card);
+}
+
+.agent__thread-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--cf-ink-2);
+}
+
+.agent__thread--active .agent__thread-title {
+  color: var(--cf-ink);
+}
+
+.agent__thread-meta {
+  flex: none;
+  font-family: var(--cf-mono);
+  font-size: 10px;
+  color: var(--cf-ink-3);
+}
+
+/* 删除按钮：默认隐藏，hover 整行时出现。
+   用文字 × 而不是图标库 —— 项目刻意不引额外依赖。 */
+.agent__thread-del {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-right: 5px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--cf-ink-3);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.14s ease,
+    background 0.14s ease,
+    color 0.14s ease;
+}
+
+.agent__thread-row:hover .agent__thread-del {
+  opacity: 1;
+}
+
+.agent__thread-del:hover {
+  background: var(--cf-danger-soft, rgba(220, 80, 70, 0.12));
+  color: var(--cf-danger);
+}
+
+/* 键盘可达：Tab 到删除按钮时也要能看见 */
+.agent__thread-del:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--cf-gold);
+  outline-offset: 1px;
+}
+
+/* ---------- 主区 ---------- */
+
+.agent__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.agent__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* 不要用 scroll-behavior: smooth —— 流式输出时每 30ms 一次贴底，
+     平滑滚动会不停被打断，观感反而像卡顿。直接赋值是瞬时的、跟手的。 */
+}
+
+.agent__scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.agent__scroll::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--cf-hair);
+}
+
+.agent__stream {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 4px 8px;
+}
+
+/* ---------- 空状态 ---------- */
+
+.agent__empty {
+  margin: 8vh auto 0;
+  max-width: 520px;
+  text-align: center;
+}
+
+.agent__empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--cf-ink);
+}
+
+.agent__empty-sub {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--cf-ink-3);
+}
+
+.agent__suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.agent__suggestion {
+  padding: 11px 15px;
+  border: 1px solid var(--cf-hair);
+  border-radius: 12px;
+  background: var(--cf-surface);
+  font-size: 13px;
+  color: var(--cf-ink-2);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.agent__suggestion:hover {
+  border-color: var(--cf-gold);
+  background: var(--cf-gold-soft);
+  color: var(--cf-gold-ink);
+  transform: translateY(-1px);
+}
+
+/* ---------- 消息 ---------- */
+
+.msg {
+  display: flex;
+  gap: 10px;
+  animation: msg-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.msg--user {
+  justify-content: flex-end;
+}
+
+.msg__avatar {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  border-radius: 7px;
+  background: var(--cf-gold-soft);
+  font-family: var(--cf-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--cf-gold-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.msg__body {
+  min-width: 0;
+  max-width: calc(100% - 34px);
+}
+
+.msg--user .msg__body {
+  padding: 9px 14px;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--cf-gold-soft);
+}
+
+.msg__text {
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--cf-ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.agent__error {
+  border-radius: 12px;
+}
+
+/* ---------- 固定区（活动条 + 审批 + 输入框）---------- */
+
+.agent__dock {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 8px 4px 14px;
+}
+
+/* ---------- 输入框 ---------- */
+
+.composer {
+  border: 1px solid var(--cf-hair);
+  border-radius: 16px;
+  background: var(--cf-surface);
+  box-shadow: var(--cf-shadow-card);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.composer:focus-within {
+  border-color: var(--cf-gold);
+  box-shadow: 0 0 0 3px var(--cf-gold-ring), var(--cf-shadow-card);
+}
+
+.composer__input {
+  padding: 11px 14px 2px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  background: transparent;
+}
+
+.composer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 10px 8px 14px;
+}
+
+.composer__hint {
+  font-family: var(--cf-mono);
+  font-size: 10.5px;
+  color: var(--cf-ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .agent {
+    height: calc(100vh - 116px);
+    margin: 0;
+  }
+
+  .agent__sidebar {
+    display: none;
+  }
+
+  .agent__stream,
+  .agent__dock {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
