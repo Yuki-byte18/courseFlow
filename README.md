@@ -47,6 +47,8 @@
 
 完整说明见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
+课程管理页的搜索缓存、并发回源策略和验证结果见[课程目录本地缓存说明](specs/003-course-catalog-cache/spec.md)。
+
 ---
 
 ## 技术栈

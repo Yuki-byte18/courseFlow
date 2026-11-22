@@ -31,13 +31,14 @@ const dateLayout = "2006-01-02"
 
 // Service 是课程域的业务逻辑层。
 type Service struct {
-	dao *DAO
-	log *zap.Logger
+	dao     *DAO
+	log     *zap.Logger
+	catalog *catalogCache
 }
 
 // NewService 构造 Service。
 func NewService(db *gorm.DB, log *zap.Logger) *Service {
-	return &Service{dao: NewDAO(db), log: log}
+	return &Service{dao: NewDAO(db), log: log, catalog: newCatalogCache()}
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +70,10 @@ func (s *Service) ListCourses(ctx context.Context, keyword string, limit int) ([
 	if limit < 1 || limit > 500 {
 		limit = 200
 	}
+	return s.catalog.list(ctx, keyword, limit, s.loadCourses)
+}
+
+func (s *Service) loadCourses(ctx context.Context, keyword string, limit int) ([]CourseVO, error) {
 	list, err := s.dao.ListCourses(ctx, keyword, limit)
 	if err != nil {
 		return nil, err
@@ -259,6 +264,7 @@ func (s *Service) CreateCourse(ctx context.Context, req CreateCourseRequest) (*C
 		return nil, err
 	}
 
+	s.catalog.version.Add(1)
 	s.log.Info("创建课程",
 		zap.Int64("course_id", c.ID),
 		zap.String("code", c.Code),
