@@ -56,6 +56,7 @@ func (s *Service) UpdateCourse(ctx context.Context, courseID int64, req UpdateCo
 	if err := s.dao.UpdateCourseFields(ctx, courseID, fields); err != nil {
 		return nil, err
 	}
+	s.catalog.version.Add(1)
 
 	course, err := s.dao.CourseByID(ctx, courseID)
 	if err != nil {
